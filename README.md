@@ -29,8 +29,8 @@ boost dynamic bitset
 
 Uses boost dynamic bitset 
 
-std::bitset
------------
+std::bitset heap
+----------------
 
 Uses std::bitset on the heap (std::unique_ptr)
 
@@ -44,3 +44,21 @@ sort_unique
 
 Sorts the Vector, then runs unique on it, then trims the vector.
 Could be even faster if destructive, but this test copies the vector first.
+
+ranges_sort_unique
+------------------
+
+Use std::ranges::sort and std::ranges::unique instead of std::sort and std::unique.
+Looks to be slightly slower in most cases?
+
+plf::bitset heap
+----------------
+
+Use https://github.com/mattreecebentley/plf_bitsets stored on the heap.
+Download plf_bitset.h to this directory to use.
+
+plf::bitset stack
+-----------------
+
+For smaller MAX_SIZE, uses plf::bitset on the stack.
+
