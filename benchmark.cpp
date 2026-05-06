@@ -14,6 +14,7 @@
 #include <bitset>
 #include <cstdint>
 #include <iostream>
+#include <set>
 #include <unordered_set>
 #include <vector>
 
@@ -157,6 +158,18 @@ static VectorType dedup_plf_bitset_heap(const VectorType& input)
 
 #endif /* PLF_BITSET_AVAILABLE */
 
+static VectorType dedup_set(const VectorType& input)
+{
+    std::set<uint32_t> seen;
+    VectorType out;
+
+    for (uint32_t x : input) 
+    {
+        if (seen.insert(x).second) out.push_back(x);
+    }
+    return out;
+}
+
 
 #ifdef FLAT_SET_AVAILABLE
 // TODO - actually check this works
@@ -211,6 +224,9 @@ static void runTest(int minEpochIterations = 10)
     });
     bench.run("unordered_set_reserve", [&] {
         ankerl::nanobench::doNotOptimizeAway(dedup_unordered_set_reserve(input));
+    });
+    bench.run("set", [&] {
+        ankerl::nanobench::doNotOptimizeAway(dedup_set(input));
     });
     bench.run("boost dynamic bitset", [&] {
         ankerl::nanobench::doNotOptimizeAway(dedup_boost_dynamic_bitset(input, maxValue));
