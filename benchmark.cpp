@@ -232,18 +232,28 @@ static void runTest()
 
 int main()
 {
+    // Dense inputs
     runTest<128>();
     runTest<2048>();
     runTest<32768>();
     runTest<131072>();
     runTest<500000>();
 
+    // Sparse inputs
     runTest<8, 100'000'000>(100);
     runTest<128, 100'000'000>(100);
     runTest<2048, 100'000'000>(100);
     runTest<8192, 100'000'000>(100);
     runTest<32768, 100'000'000>(100);
     runTest<65536, 100'000'000>(100);
+
+    // oversubscribed inputs
+    runTest<2048, 128>();
+    runTest<2048, 256>();
+    runTest<2048, 512>();
+    runTest<2048, 1024>();
+    runTest<2048, 2048>();
+    runTest<2048, 3196>();
 
     return 0;
 }
