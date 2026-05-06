@@ -17,6 +17,11 @@
 #include <unordered_set>
 #include <vector>
 
+#if __has_include(<flat_set>)
+#  include <flat_set>
+#  define FLAT_SET_AVAILABLE
+#endif
+
 using VectorType = std::vector<uint32_t>;
 
 #define PRINT(x) std::cerr << x << '\n'
@@ -152,6 +157,22 @@ static VectorType dedup_plf_bitset_heap(const VectorType& input)
 
 #endif /* PLF_BITSET_AVAILABLE */
 
+
+#ifdef FLAT_SET_AVAILABLE
+// TODO - actually check this works
+static VectorType dedup_flat_set(const VectorType& input)
+{
+    std::flat_set<uint32_t> seen;
+    VectorType out;
+
+    for (const auto& x : input) 
+    {
+        if (seen.insert(x).second) out.push_back(x);
+    }
+    return out;
+}
+#endif /* FLAT_SET_AVAILABLE */
+
 /////////////////////////////////////////////////////////////////////////////////
 
 static VectorType generateInput(int n, uint32_t maxValue)
@@ -220,6 +241,12 @@ static void runTest(int minEpochIterations = 10)
     bench.run("ranges_sort_unique", [&] {
         ankerl::nanobench::doNotOptimizeAway(dedup_ranges_sort_unique(input));
     });
+
+    #ifdef FLAT_SET_AVAILABLE
+    bench.run("std::flat_set", [&] {
+        ankerl::nanobench::doNotOptimizeAway(dedup_flat_set(input));
+    });
+    #endif
     
 }
 
