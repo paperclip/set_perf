@@ -69,3 +69,6 @@ Testing/
 
 benchmark
 unordered_set_perf
+
+## Don't include in the repo - licence is too restrictive
+plf_bitset.h

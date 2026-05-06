@@ -3,8 +3,14 @@
 #define ANKERL_NANOBENCH_IMPLEMENT
 #include "nanobench.h"
 
+#if __has_include("plf_bitset.h")
+#  include "plf_bitset.h"
+#  define PLF_BITSET_AVAILABLE
+#endif
+
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
+#include <algorithm>
 #include <bitset>
 #include <cstdint>
 #include <iostream>
@@ -99,6 +105,53 @@ static VectorType dedup_sort_unique(const VectorType& input)
     return output;
 }
 
+static VectorType dedup_ranges_sort_unique(const VectorType& input)
+{
+    auto output = input;
+    std::ranges::sort(output);
+    auto ret = std::ranges::unique(output);
+    output.erase(ret.begin(), ret.end());
+    return output;
+}
+
+#ifdef PLF_BITSET_AVAILABLE
+template<std::size_t MAX_VALUE>
+static VectorType dedup_plf_bitset_stack(const VectorType& input)
+{
+    static_assert(MAX_VALUE <= 1'000'000, "MAX_VALUE is too large for stack allocation");
+    plf::bitset<MAX_VALUE> seen;
+    VectorType out;
+    for (uint32_t x : input) 
+    {
+        if (!seen.test(x))
+        {
+            seen.set(x);
+            out.push_back(x);
+        }
+    }
+    return out;
+}
+
+
+template<std::size_t MAX_VALUE>
+static VectorType dedup_plf_bitset_heap(const VectorType& input)
+{
+    using bitset = plf::bitset<MAX_VALUE>;
+    std::unique_ptr<bitset> seen = std::make_unique<bitset>();
+    VectorType out;
+
+    for (uint32_t x : input) 
+    {
+        if (!seen->test(x)) {
+            seen->set(x);
+            out.push_back(x);
+        }
+    }
+    return out;
+}
+
+#endif /* PLF_BITSET_AVAILABLE */
+
 /////////////////////////////////////////////////////////////////////////////////
 
 static VectorType generateInput(int n, uint32_t maxValue)
@@ -141,18 +194,33 @@ static void runTest(int minEpochIterations = 10)
     bench.run("boost dynamic bitset", [&] {
         ankerl::nanobench::doNotOptimizeAway(dedup_boost_dynamic_bitset(input, maxValue));
     });
-    bench.run("std::bitset", [&] {
+    bench.run("std::bitset heap", [&] {
         ankerl::nanobench::doNotOptimizeAway(dedup_std_bitset_heap<maxValue>(input));
     });
+#ifdef PLF_BITSET_AVAILABLE
+    bench.run("plf::bitset heap", [&] {
+        ankerl::nanobench::doNotOptimizeAway(dedup_plf_bitset_heap<maxValue>(input));
+    });
+#endif
     if constexpr (maxValue <= 1'000'000) 
     {
         bench.run("std::bitset stack", [&] {
             ankerl::nanobench::doNotOptimizeAway(dedup_std_bitset_stack<maxValue>(input));
         });
+        
+#ifdef PLF_BITSET_AVAILABLE
+        bench.run("plf::bitset stack", [&] {
+            ankerl::nanobench::doNotOptimizeAway(dedup_plf_bitset_stack<maxValue>(input));
+        });
+#endif
     }
     bench.run("sort_unique", [&] {
         ankerl::nanobench::doNotOptimizeAway(dedup_sort_unique(input));
     });
+    bench.run("ranges_sort_unique", [&] {
+        ankerl::nanobench::doNotOptimizeAway(dedup_ranges_sort_unique(input));
+    });
+    
 }
 
 template<std::size_t n>
