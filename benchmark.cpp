@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <bitset>
+#include <chrono>
 #include <cstdint>
 #include <iostream>
 #include <set>
@@ -190,7 +191,8 @@ static VectorType dedup_flat_set(const VectorType& input)
 
 static VectorType generateInput(int n, uint32_t maxValue)
 {
-    static std::mt19937 randomSource;
+    static unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    static std::mt19937 randomSource{ seed };
     std::uniform_int_distribution<uint32_t> generator{0, maxValue-1};
 
     VectorType output;
