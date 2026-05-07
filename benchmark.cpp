@@ -60,6 +60,7 @@ static VectorType dedup_boost_dynamic_bitset(const VectorType& input, unsigned m
     boost::dynamic_bitset<> seen{ maxValue, 0 };
     seen.reset();
     VectorType out;
+    out.reserve(input.size());
     dedup_generic_bitset_helper(input, out, seen);
     return out;
 }
@@ -86,6 +87,7 @@ static VectorType dedup_std_bitset_heap(const VectorType& input)
 {
     std::unique_ptr<std::bitset<MAX_VALUE>> seen = std::make_unique<std::bitset<MAX_VALUE>>();
     VectorType out;
+    out.reserve(input.size());
     dedup_generic_bitset_helper(input, out, *seen);
     return out;
 }
@@ -96,6 +98,7 @@ static VectorType dedup_std_bitset_stack(const VectorType& input)
     static_assert(MAX_VALUE <= 1'000'000, "MAX_VALUE is too large for stack allocation");
     std::bitset<MAX_VALUE> seen;
     VectorType out;
+    out.reserve(input.size());
     dedup_generic_bitset_helper(input, out, seen);
     return out;
 }
@@ -142,6 +145,7 @@ static VectorType dedup_plf_bitset_stack(const VectorType& input)
     static_assert(MAX_VALUE <= 1'000'000, "MAX_VALUE is too large for stack allocation");
     plf::bitset<MAX_VALUE> seen;
     VectorType out;
+    out.reserve(input.size());
     dedup_generic_bitset_helper(input, out, seen);
     return out;
 }
@@ -152,6 +156,7 @@ static VectorType dedup_plf_bitset_heap(const VectorType& input)
     using bitset = plf::bitset<MAX_VALUE>;
     std::unique_ptr<bitset> seen = std::make_unique<bitset>();
     VectorType out;
+    out.reserve(input.size());
     dedup_generic_bitset_helper(input, out, *seen);
     return out;
 }
@@ -162,6 +167,7 @@ static VectorType dedup_set(const VectorType& input)
 {
     std::set<uint32_t> seen;
     VectorType out;
+    out.reserve(input.size());
     dedup_generic_set_helper(input, out, seen);
     return out;
 }
@@ -173,6 +179,7 @@ static VectorType dedup_flat_set(const VectorType& input)
 {
     std::flat_set<uint32_t> seen;
     VectorType out;
+    out.reserve(input.size());
     dedup_generic_set_helper(input, out, seen);
     return out;
 }
@@ -187,6 +194,7 @@ static VectorType generateInput(int n, uint32_t maxValue)
     std::uniform_int_distribution<uint32_t> generator{0, maxValue-1};
 
     VectorType output;
+    output.reserve(n);
     for (auto i=0; i<n; i++)
     {
         output.push_back(generator(randomSource));
