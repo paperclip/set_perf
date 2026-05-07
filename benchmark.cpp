@@ -9,7 +9,18 @@
 #endif
 
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
-#include <boost/container/flat_set.hpp>
+
+#if __has_include(<boost/container/flat_set.hpp>)
+#  include <boost/container/flat_set.hpp>
+#  define BOOST_FLAT_SET_AVAILABLE
+#endif
+
+#ifdef WITH_ABSL
+#  if __has_include(<absl/container/flat_hash_set.h>)
+#    include <absl/container/flat_hash_set.h>
+#    define ABSEIL_FLAT_HASH_SET_AVAILABLE
+#  endif
+#endif /* WITH_ABSL */
 
 #include <algorithm>
 #include <bitset>
@@ -185,6 +196,17 @@ static VectorType dedup_flat_set(const VectorType& input)
 }
 #endif /* FLAT_SET_AVAILABLE */
 
+#ifdef ABSEIL_FLAT_HASH_SET_AVAILABLE
+static VectorType dedup_absl_flat_hash_set(const VectorType& input)
+{
+    absl::flat_hash_set<uint32_t> seen;
+    VectorType out;
+    out.reserve(input.size());
+    dedup_generic_set_helper(input, out, seen);
+    return out;
+}
+#endif /* ABSEIL_FLAT_HASH_SET_AVAILABLE */
+
 /////////////////////////////////////////////////////////////////////////////////
 
 static VectorType generateInput(int n, uint32_t maxValue)
@@ -232,9 +254,12 @@ static void runTest(int minEpochIterations = 10)
     bench.run("boost::dynamic_bitset", [&] {
         ankerl::nanobench::doNotOptimizeAway(dedup_boost_dynamic_bitset(input, maxValue));
     });
+#ifdef WITH_FLAT_SET_WITHOUT_RESERVE
+    // flat_set is really slow, so only run once
     bench.run("boost::flat_set", [&] {
         ankerl::nanobench::doNotOptimizeAway(dedup_boost_flat_set(input));
     });
+#endif /* WITH_FLAT_SET_WITHOUT_RESERVE */
     bench.run("boost::flat_set reserve", [&] {
         ankerl::nanobench::doNotOptimizeAway(dedup_boost_flat_set_reserve(input, maxValue));
     });
@@ -271,7 +296,11 @@ static void runTest(int minEpochIterations = 10)
         ankerl::nanobench::doNotOptimizeAway(dedup_flat_set(input));
     });
 #endif
-    
+#ifdef ABSEIL_FLAT_HASH_SET_AVAILABLE
+    bench.run("absl::flat_hash_set", [&] {
+        ankerl::nanobench::doNotOptimizeAway(dedup_absl_flat_hash_set(input));
+    });
+#endif
 }
 
 template<std::size_t n>

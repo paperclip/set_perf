@@ -68,6 +68,7 @@ Testing/
 .cache/
 
 benchmark
+benchmark_with_absl
 unordered_set_perf
 
 ## Don't include in the repo - licence is too restrictive
